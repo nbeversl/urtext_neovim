@@ -14,7 +14,7 @@ class UrtextNeoVim:
         editor_methods = {
             'open_file_to_position': self.open_file_to_position,
             'get_line_and_cursor': self.get_line_and_cursor,
-            'popup' : self.notify,
+            'info_message' : self.info_message,
             'get_current_filename': self.get_current_filename,
             'get_position': self.get_position,
             'scratch_buffer': self.scratch_buffer,
@@ -22,8 +22,8 @@ class UrtextNeoVim:
             'set_buffer': self.set_buffer,
             'show_panel': self.show_panel,
             'insert_text' : self.insert_text,
-            # 'save_current' : save_current,
-            # 'set_clipboard' : set_clipboard,
+            'save_current' : self.save_current,
+            'set_clipboard' : self.set_clipboard,
             # 'open_external_file' : open_external_file,
             # 'replace' : replace,
             # 'close_current': close_current,
@@ -117,7 +117,6 @@ class UrtextNeoVim:
 
     def get_current_filename(self):
         return self.nvim.current.buffer.name
-        
 
     def find_buffer_by_path(self, full_path):
         for buf in self.nvim.buffers:
