@@ -1,7 +1,9 @@
-import pynvim
-import os
 from urtext.project_list import ProjectList
+import subprocess
 import threading
+import pynvim
+import sys
+import os
 
 @pynvim.plugin
 class UrtextNeoVim:
@@ -24,15 +26,15 @@ class UrtextNeoVim:
             'insert_text' : self.insert_text,
             'save_current' : self.save_current,
             'set_clipboard' : self.set_clipboard,
-            # 'open_external_file' : open_external_file,
-            # 'replace' : replace,
-            # 'close_current': close_current,
-            # 'write_to_console' : print,
+            'open_external_file' : self.open_external_file,
+            'replace' : self.replace,
+            'close_current': self.close_current,
+            'write_to_console' : self.nvim.out_write,
             'get_current_folder': self.get_current_folder,
-            # 'status_message' : self.nvim.write_out,
-            # 'close_file': close_file,
-            # 'save_file': save_file,
-            # 'retarget_view' : retarget_view,
+            'status_message' : self.nvim.out_write,
+            'close_file': self.close_file,
+            'save_file': self.save_file,
+            'retarget_view' : self.retarget_view,
             # 'select_file_or_folder': select_file_or_folder,
             # 'refresh_files' : refresh_views,
             # 'get_open_files': get_open_files,
@@ -150,3 +152,41 @@ class UrtextNeoVim:
 
     def set_clipboard(self, string):
         self.nvim.funcs.setreg('+', string)
+
+    def replace(self, filename='', start=0, end=0, full_line=False, replacement_text=''):
+        if filename:
+            buf = self.find_buffer_by_path(filename)
+        else:
+            buf = self.nvim.current.buffer
+        buf[start:end] = replacement_text
+
+    def open_external_file(self, filepath):
+        if sys.platform.startswith('darwin'):
+            subprocess.run(['open', filepath])
+        elif sys.platform.startswith('linux'):
+            subprocess.run(['xdg-open', filepath])
+        elif sys.platform.startswith('win'):
+            os.startfile(filepath)
+
+    def close_current(self):
+        self.nvim.command('bdelete')
+
+    def close_file(self, filename):
+        buffer = self.find_buffer_by_path(filename)
+        if buffer:
+            if buffer.options['modified']:
+                self.nvim.command(f'confirm bdelete {buffer.number}')
+            else:
+                self.nvim.command(f'bdelete {buffer.number}')
+
+    def save_file(self, filename):
+        buffer = self.find_buffer_by_path(filename)
+        if buffer:
+            self.nvim.command(f'write {buffer.number}')
+
+    def retarget_view(self, filename):
+        buffer = self.find_buffer_by_path(filename)
+        if buffer:
+            self.nvim.command(f"checktime {buffer.number}")
+
+
