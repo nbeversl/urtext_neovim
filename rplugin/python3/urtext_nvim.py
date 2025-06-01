@@ -133,16 +133,20 @@ class UrtextNeoVim:
         self.nvim.command('write') 
 
     def get_position(self):
-        line, cursor, _, [row, col] = self.get_line_and_cursor()
-        lines_before = self.nvim.current.buffer[:row - 1]
-        chars_before = sum(len(l) + 1 for l in lines_before) 
-        absolute_offset = chars_before + col
-        return absolute_offset
+        full_line, col_pos, file_pos, [file_pos, file_pos] = self.get_line_and_cursor()
+        self.info_message(str(file_pos))
+        return file_pos
 
-    def notify(self, message):
+    def info_message(self, message):
         self.nvim.async_call(self.nvim.api.notify, message, 3, {})
 
     def get_line_and_cursor(self):
         full_line = self.nvim.current.line
-        [row, coll] = self.nvim.current.window.cursor
-        return full_line, 0, 0, [0, 0]
+        [row, col_pos] = self.nvim.current.window.cursor
+        lines_before = self.nvim.current.buffer[:row - 1]
+        chars_before = sum(len(l) + 1 for l in lines_before) 
+        file_pos = chars_before + col_pos
+        return full_line, col_pos, file_pos, [file_pos, file_pos]
+
+    def set_clipboard(self, string):
+        self.nvim.funcs.setreg('+', string)
