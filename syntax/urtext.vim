@@ -21,7 +21,7 @@ syntax region urtextFrame start="\[\[" end="\]\]" contains=urtextFrameOpeningWra
 syntax match urtextFrameOpeningWrapper /\[\[/ contained containedin=urtextFrame
 syntax match urtextFrameClosingWrapper /\]\]/ contained containedin=urtextFrame
 syntax match urtextCall /\<[A-Z]\+\>/ contained containedin=urtextFrame
-syntax region urtextMeta start=/\w\+::/ end=/[;^M]/  keepend contains=urtextMetaAddSelf,urtextMetaAddDescendants,urtextName,urtextSuffix,urtextMetaKey,urtextMetaAssigner
+syntax region urtextMeta start=/\w\+::/ end=/[;\n]/  keepend contains=urtextMetaAddSelf,urtextMetaAddDescendants,urtextName,urtextSuffix,urtextMetaKey,urtextMetaAssigner
 
 "syntax match urtextMetaAddSelf /\+/ contained containedin=urtextMeta
 syntax match urtextMetaAddDescendants /\*\{1,2}/ contained containedin=urtextMeta
