@@ -14,7 +14,7 @@ syntax region urtextFileLink start=+|/+ end=+>+ contains=urtextLinkOpeningWrappe
 syntax match urtextBraces /[{}]/
 syntax region urtextTimestamp start=+<+ end=+>+ 
 syntax match urtextTitle /\w\+ _/
-syntax match urtextLinkOpeningWrapper /|/
+syntax match urtextLinkOpeningWrapper /|/ contained containedin=urtextNodeLink
 syntax match urtextLinkClosingWrapper />/ contained containedin=urtextNodeLink
 syntax match urtextPointerClosingWrapper />>/ contained containedin=urtextNodeLink
 syntax match urtextLinkContent /[^|>]\+/ contained containedin=urtextNodeLink
