@@ -6,20 +6,19 @@ let b:current_syntax = "urtext"
 syntax clear
 
 syntax match urtextAnchor /^\s*\./
-syntax region urtextNodeLink start=+|+ end=+>+ contains=urtextLinkOpeningWrapper, urtextLinkClosingWrapper, urtextLinkContent transparent keepend
 syntax region urtextNodePointer start=+|+ end=+>>+ contains=urtextLinkOpeningWrapper, urtextPointerClosingWrapper, urtextLinkContent transparent keepend
 syntax region urtextFileLink start=+|/+ end=+>+ contains=urtextLinkOpeningWrapper, urtextLinkClosingWrapper, urtextLinkContent transparent keepend
-
-
+syntax match urtextNodeLink +|[^>]\{-}>+ contains=urtextLinkOpeningWrapper,urtextLinkClosingWrapper,urtextLinkContent
 syntax match urtextBraces /[{}]/
 syntax region urtextTimestamp start=+<+ end=+>+ 
 syntax match urtextTitle /\w\+ _/
-syntax match urtextLinkOpeningWrapper /|/ contained containedin=urtextNodeLink
-syntax match urtextLinkClosingWrapper />/ contained containedin=urtextNodeLink
+syntax match urtextLinkOpeningWrapper /|/ contained containedin=urtextNodeLink keepend
+syntax match urtextLinkClosingWrapper />/ contained containedin=urtextNodeLink keepend
 syntax match urtextPointerClosingWrapper />>/ contained containedin=urtextNodeLink
+"syntax match urtextLinkContent /\[^|>]\+\ze/ contained containedin=urtextNodeLink
 syntax match urtextLinkContent /[^|>]\+/ contained containedin=urtextNodeLink
 syntax match urtextHash /#\w\+/
-syntax region urtextFrame start="\[\[" end="\]\]" keepend contains=urtextFrameOpeningWrapper, urtextAnchor, urtextFrameClosingWrapper transparent
+syntax region urtextFrame start="\[\[" end="\]\]" contains=urtextFrameOpeningWrapper, urtextAnchor, urtextFrameClosingWrapper, urtextCall transparent keepend
 syntax match urtextFrameOpeningWrapper /\[\[/ contained containedin=urtextFrame
 syntax match urtextFrameClosingWrapper /\]\]/ contained containedin=urtextFrame
 syntax match urtextCall /\<[A-Z]\+\>/ contained containedin=urtextFrame
