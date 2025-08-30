@@ -78,7 +78,7 @@ class UrtextNeoVim:
         if hasattr(self, 'project_list') and (self.project_list is not None):
             self.project_list.editor_methods = editor_methods
         else:
-            self.project_list = ProjectList("/home/nathaniel-beversluis/Documents/CyanUrtext",
+            self.project_list = ProjectList("/Users/nathanielbeversluis/Documents/Urtext Projects/Urtext Development",
                 is_async=False,
                 editor_methods=editor_methods)
 
