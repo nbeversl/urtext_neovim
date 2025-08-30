@@ -11,7 +11,7 @@ syntax region urtextFileLink start=+|/+ end=+>+ contains=urtextLinkOpeningWrappe
 syntax match urtextNodeLink +|[^>]\{-}>+ contains=urtextLinkOpeningWrapper,urtextLinkClosingWrapper,urtextLinkContent
 syntax match urtextBraces /[{}]/
 syntax region urtextTimestamp start=+<+ end=+>+ 
-syntax match urtextTitle /\w\+ _/
+syntax match urtextTitle /+\+ _/
 syntax match urtextLinkOpeningWrapper /|/ contained containedin=urtextNodeLink keepend
 syntax match urtextLinkClosingWrapper />/ contained containedin=urtextNodeLink keepend
 syntax match urtextPointerClosingWrapper />>/ contained containedin=urtextNodeLink
@@ -21,7 +21,7 @@ syntax region urtextFrame start="\[\[" end="\]\]" contains=urtextFrameOpeningWra
 syntax match urtextFrameOpeningWrapper /\[\[/ contained containedin=urtextFrame
 syntax match urtextFrameClosingWrapper /\]\]/ contained containedin=urtextFrame
 syntax match urtextCall /\<[A-Z]\+\>/ contained containedin=urtextFrame
-syntax region urtextMeta start=/\w\+::/ end=/[;\n]/  keepend contains=urtextMetaAddSelf,urtextMetaAddDescendants,urtextName,urtextSuffix,urtextMetaKey,urtextMetaAssigner
+syntax region urtextMeta start=/\w\+::/ end=/[;\n]/ contains=urtextTimestamp keepend contains=urtextMetaAddSelf,urtextMetaAddDescendants,urtextName,urtextSuffix,urtextMetaKey,urtextMetaAssigner
 
 "syntax match urtextMetaAddSelf /\+/ contained containedin=urtextMeta
 syntax match urtextMetaAddDescendants /\*\{1,2}/ contained containedin=urtextMeta
