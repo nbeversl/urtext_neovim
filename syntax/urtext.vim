@@ -1,48 +1,64 @@
 if exists("b:current_syntax")
   finish
 endif
-let b:current_syntax = "urtext"
+let b:current_syntax = "Urtext"
 
 syntax clear
 
-syntax match urtextAnchor /^\s*\./
-syntax region urtextNodePointer start=+|+ end=+>>+ contains=urtextLinkOpeningWrapper, urtextPointerClosingWrapper, urtextLinkContent transparent keepend
-syntax region urtextFileLink start=+|/+ end=+>+ contains=urtextLinkOpeningWrapper, urtextLinkClosingWrapper, urtextLinkContent transparent keepend
-syntax match urtextNodeLink +|[^>]\{-}>+ contains=urtextLinkOpeningWrapper,urtextLinkClosingWrapper,urtextLinkContent
-syntax match urtextBraces /[{}]/
-syntax region urtextTimestamp start=+<+ end=+>+ 
-syntax match urtextTitle /+\+ _/
-syntax match urtextLinkOpeningWrapper /|/ contained containedin=urtextNodeLink keepend
-syntax match urtextLinkClosingWrapper />/ contained containedin=urtextNodeLink keepend
-syntax match urtextPointerClosingWrapper />>/ contained containedin=urtextNodeLink
-syntax match urtextLinkContent /[^|>]\+/ contained containedin=urtextNodeLink
-syntax match urtextHash /#\w\+/
-syntax region urtextFrame start="\[\[" end="\]\]" contains=urtextFrameOpeningWrapper, urtextAnchor, urtextFrameClosingWrapper, urtextCall transparent keepend
-syntax match urtextFrameOpeningWrapper /\[\[/ contained containedin=urtextFrame
-syntax match urtextFrameClosingWrapper /\]\]/ contained containedin=urtextFrame
-syntax match urtextCall /\<[A-Z]\+\>/ contained containedin=urtextFrame
-syntax region urtextMeta start=/\w\+::/ end=/[;\n]/ contains=urtextTimestamp keepend contains=urtextMetaAddSelf,urtextMetaAddDescendants,urtextName,urtextSuffix,urtextMetaKey,urtextMetaAssigner
+syntax region UrtextNodePointer start=+|+ end=+>>+ oneline contains=UrtextLinkOpeningWrapper, UrtextPointerClosingWrapper, UrtextLinkContent transparent keepend
 
-"syntax match urtextMetaAddSelf /\+/ contained containedin=urtextMeta
-syntax match urtextMetaAddDescendants /\*\{1,2}/ contained containedin=urtextMeta
-syntax match urtextMetaKey /[\w_?!#0-9-]\+/ contained containedin=urtextMeta
-syntax match urtextMetaAssigner /::/ contained containedin=urtextMeta
+syntax region UrtextFileLink start=+|/+ end=+>+ oneline contains=UrtextLinkOpeningWrapper, UrtextLinkClosingWrapper, UrtextLinkContent transparent keepend
 
-highlight urtextAnchor ctermfg=DarkGreen
-highlight urtextFrameOpeningWrapper ctermfg=DarkGreen guifg=DarkGreen
-highlight urtextFrameClosingWrapper ctermfg=DarkGreen guifg=DarkGreen
-highlight urtextCall gui=bold cterm=bold
-highlight urtextHash gui=bold cterm=bold
-highlight urtextBraces ctermfg=Red guifg=Red
-highlight urtextTimestamp ctermfg=Green guifg=Green ctermbg=NONE guibg=NONE
-highlight urtextTitle gui=bold cterm=bold
-highlight urtextLinkOpeningWrapper gui=bold cterm=bold
-highlight urtextLinkClosingWrapper gui=bold cterm=bold
-highlight urtextLinkContent ctermfg=Blue guifg=Blue
+syntax match UrtextNodeLink +|[^>]\{-}>+ oneline contains=UrtextLinkOpeningWrapper,UrtextLinkClosingWrapper,UrtextLinkContent
 
-highlight urtextMeta gui=bold cterm=bold
-highlight urtextMetaAddSelf gui=bold cterm=bold
-highlight urtextMetaAddDescendants guifg=Green ctermbg=NONE guibg=NONE
-highlight urtextMetaKey ctermfg=DarkGreen guifg=DarkGreen
-highlight urtextMetaAssigner  ctermfg=DarkGreen
+syntax region UrtextFrame start="\[\[" end="\]\]" contains=UrtextFrameOpeningWrapper, UrtextAnchor, UrtextFrameClosingWrapper, UrtextCall transparent keepend
+
+syntax match UrtextBraces /[{}]/
+highlight default link UrtextBraces Special
+
+syntax region UrtextTimestamp start=+<+ end=+>+ 
+highlight default link UrtextTimestamp String
+
+syntax match UrtextTitle "{\=\zs[[:alnum:][:punct:] ]\+ _" 
+highlight default link UrtextTitle Title
+
+syntax match UrtextLinkOpeningWrapper /|/ contained containedin=UrtextNodeLink keepend
+highlight default link UrtextLinkOpeningWrapper Special
+
+syntax match UrtextLinkClosingWrapper />/ contained containedin=UrtextNodeLink keepend
+highlight default link UrtextLinkClosingWrapper Special
+
+syntax match UrtextPointerClosingWrapper />>/ contained containedin=UrtextNodeLink
+highlight default link UrtextPointerClosingWrapper Special
+
+syntax match UrtextLinkContent /[^|>]\+/ contained containedin=UrtextNodeLink
+highlight default link UrtextLinkContent Title
+
+syntax match UrtextHash /#\w\+/
+highlight default link UrtextHash UrtextHashStyle
+
+syntax match UrtextFrameOpeningWrapper /\[\[/ contained containedin=UrtextFrame
+highlight default link UrtextFrameOpeningWrapper Special
+
+syntax match UrtextFrameClosingWrapper /\]\]/ contained containedin=UrtextFrame
+highlight default link UrtextFrameClosingWrapper Special
+
+syntax match UrtextCall /\<[A-Z]\+\>/ contained containedin=UrtextFrame
+highlight default link UrtextCall Function
+
+syntax match UrtextMetaKey /\k\+\ze::/ nextgroup=UrtextMetaAssigner
+highlight default link UrtextMetaKey Constant
+
+syntax match UrtextMetaAssigner /::/ oneline contained nextgroup=UrtextMetaValues
+highlight default link UrtextMetaAssigner Special
+
+syntax match UrtextMetaValues /[^;\n]\+/ oneline contained
+highlight default link UrtextMetaValues String
+
+syntax match UrtextSuffix /\.[A-Za-z0-9_-]\+/ contained
+highlight default link UrtextSuffix Type
+
+"syntax match UrtextTimestamp /<\d\{4}-\d\{2}-\d\{2}>/ contained
+"highlight default link UrtextTimestamp Number
+
 syntax sync fromstart

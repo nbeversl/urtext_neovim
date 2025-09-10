@@ -15,31 +15,8 @@ class UrtextNeoVim:
         self._last_filename = None
         self._main_thread = threading.current_thread()
         self._last_selections_count = 0
-
-    def _run_on_main_and_wait(self, func, *args, **kwargs):
-        # If already on the main thread (e.g., synchronous RPC handler), call directly
-        if threading.current_thread() is self._main_thread:
-            return func(*args, **kwargs)
-        # Otherwise, schedule on main and wait
-        result = {}
-        error = {}
-        event = threading.Event()
-
-        def _wrapper():
-            result['value'] = func(*args, **kwargs)
-            event.set()
-
-        self.nvim.async_call(_wrapper)
-        event.wait()
-        if 'exc' in error:
-            raise error['exc']
-        return result.get('value')
-
-    @pynvim.command('Urtest', nargs='*')
-    def load(self, args):
-        # Ensure we capture the Neovim RPC main thread identity
-        self._main_thread = threading.current_thread()
-        editor_methods = {
+        self.project_list = None
+        self.editor_methods = {
             'open_file_to_position': self.open_file_to_position,
             'get_line_and_cursor': self.nvim_get_line_and_cursor,
             'info_message' : self.info_message,
@@ -65,7 +42,6 @@ class UrtextNeoVim:
             'refresh_files' : self.refresh_files,
             'get_open_files': self.get_open_files,
             # 'select_file_or_folder': select_file_or_folder,
-            # 'refresh_files' : refresh_views,
             # 'get_open_files': get_open_files,
             # 'preview_file_at_position' : preview_file_at_position,
             # 'close_inactive': close_inactive,
@@ -74,18 +50,43 @@ class UrtextNeoVim:
             # 'hover_popup': hover_popup,
             # 'get_selection': get_selection
         }
-        # Initialize ProjectList once; subsequent calls just refresh editor methods
-        if hasattr(self, 'project_list') and (self.project_list is not None):
-            self.project_list.editor_methods = editor_methods
-        else:
-            self.project_list = ProjectList("/Users/nathanielbeversluis/Documents/Urtext Projects/Urtext Development",
-                is_async=False,
-                editor_methods=editor_methods)
 
-    @pynvim.command('UrAction', nargs='*')
+    def _run_on_main_and_wait(self, func, *args, **kwargs):
+        # If already on the main thread (e.g., synchronous RPC handler), call directly
+        if threading.current_thread() is self._main_thread:
+            return func(*args, **kwargs)
+        # Otherwise, schedule on main and wait
+        result = {}
+        error = {}
+        event = threading.Event()
+
+        def _wrapper():
+            result['value'] = func(*args, **kwargs)
+            event.set()
+
+        self.nvim.async_call(_wrapper)
+        event.wait()
+        if 'exc' in error:
+            raise error['exc']
+        return result.get('value')
+
+    @pynvim.command('Urtext', nargs='*')
+    def load(self, args):
+        open_file = self.get_current_filename()
+
+        if open_file:
+            if self.project_list is None:
+                self.project_list = ProjectList(open_file, editor_methods=self.editor_methods)
+            else:
+                self.project_list.init_project(open_file)
+
+    @pynvim.command('UrtextAction', nargs='*')
     def action(self, args):
         if len(args):
             selection = ' '.join(args)
+            if not self.project_list:
+                self.info_message('No Urtext project is active')
+                return
             self.project_list.run_action(selection)
 
     def get_current_folder(self):
@@ -94,10 +95,7 @@ class UrtextNeoVim:
 
     @pynvim.autocmd('BufWritePost', pattern='*', sync=True, eval='expand("<afile>")')
     def on_buf_write_post(self, filename):
-        # Only notify Urtext for files inside known project paths
-        paths = self.project_list.get_all_paths()
-        if any(filename.startswith(p) for p in paths):
-            self.project_list.on_modified(filename)
+        self.project_list.on_modified(os.path.abspath(filename))
 
     @pynvim.autocmd('BufEnter', pattern='*', sync=False, eval='expand("<afile>")')
     def on_buf_enter(self, filename):
@@ -218,20 +216,29 @@ class UrtextNeoVim:
 
     def get_buffer(self, filename):
         def _do():
-            for buf in self.nvim.buffers:
-                if buf.name == filename:
-                    return "\n".join(buf[:])
-            # If not found or not loaded, try bufadd/bufload to read without opening
+            # 1. Try to resolve by filename directly
+            bufnr = self.nvim.funcs.bufnr(filename, 0)  # 0 = don't create if missing
+            if bufnr > 0 and self.nvim.funcs.bufexists(bufnr):
+                return "\n".join(self.nvim.funcs.getbufline(bufnr, 1, '$'))
+
+            # 2. If still not found, create/load it without opening
             bufnr = self.nvim.funcs.bufadd(filename)
-            # Disable swapfile for this buffer before loading to avoid E325
             self.nvim.buffers[bufnr].options['swapfile'] = False
-            # Proactively remove any existing swap file to avoid ATTENTION prompt
+
+            # Remove stale swap if present
             swap_path = self.nvim.funcs.swapname(bufnr)
             if isinstance(swap_path, str) and swap_path and os.path.exists(swap_path):
                 os.remove(swap_path)
+
             self.nvim.funcs.bufload(bufnr)
-            return "\n".join(self.nvim.buffers[bufnr][:])
+
+            if self.nvim.funcs.bufexists(bufnr):
+                return "\n".join(self.nvim.funcs.getbufline(bufnr, 1, '$'))
+
+            return ""
+
         return self._run_on_main_and_wait(_do)
+
 
     def set_buffer(self, filename, contents, identifier=None):
         def _do():
@@ -258,25 +265,28 @@ class UrtextNeoVim:
 
     def open_file_to_position(self, filename, line=None, character=None, highlight_range=None, new_window=False):
         def _do():
-            # Prefer switching to an existing buffer; avoid :edit to prevent E325 prompts
-            target = None
-            for b in self.nvim.buffers:
-                if b.name == filename:
-                    target = b
-                    break
-            if target is not None:
-                self.nvim.command(f'buffer {target.number}')
-            else:
+            # Save current buffer if possible
+            cur = self.nvim.current.buffer
+            if cur.valid and cur.options.get("modifiable", True) and cur.name:
+                if self.nvim.funcs.getbufvar(cur.number, "&modified"):
+                    self.nvim.command("silent write")
+
+            # Find or create target buffer
+            bufnr = self.nvim.funcs.bufnr(filename, 0)
+            if bufnr <= 0 or not self.nvim.funcs.bufexists(bufnr):
                 bufnr = self.nvim.funcs.bufadd(filename)
-                # Disable swapfile and remove any pre-existing swap before load to avoid E325
-                self.nvim.buffers[bufnr].options['swapfile'] = False
+                self.nvim.buffers[bufnr].options["swapfile"] = False
                 swap_path = self.nvim.funcs.swapname(bufnr)
                 if isinstance(swap_path, str) and swap_path and os.path.exists(swap_path):
                     os.remove(swap_path)
                 self.nvim.funcs.bufload(bufnr)
-                self.nvim.command(f'buffer {bufnr}')
+
+            # Switch directly via API (bypasses E37)
+            self.nvim.api.set_current_buf(self.nvim.buffers[bufnr])
+
             if character:
                 self.set_position(character)
+
         self._run_on_main_and_wait(_do)
 
     def set_position(self, char_pos):
@@ -324,6 +334,7 @@ class UrtextNeoVim:
     def save_current(self):
         def _do():
             self.nvim.command('write')
+
         self._run_on_main_and_wait(_do)
 
     def get_position(self):
@@ -392,7 +403,7 @@ class UrtextNeoVim:
         self._run_on_main_and_wait(_do)
 
     def refresh_files(self, file_list):
-        # Reload one or more files from disk into their buffers, discarding edits (like ST 'revert')
+        """Reload the given filename(s) from disk, discarding edits."""
         def _do():
             files = file_list if isinstance(file_list, list) else [file_list]
             current_bufnr = self.nvim.current.buffer.number
@@ -408,15 +419,15 @@ class UrtextNeoVim:
                         break
                 if not target:
                     continue
-                need_restore = current_bufnr != target.number
+                need_restore = (target.number != current_bufnr)
                 if need_restore:
-                    self.nvim.command(f'buffer {target.number}')
-                # Force reload from disk, discarding any modifications
-                self.nvim.command('silent edit!')
+                    self.nvim.command(f"buffer {target.number}")
+                self.nvim.command("silent edit!")  # reload from disk
                 if need_restore:
-                    self.nvim.command(f'buffer {current_bufnr}')
+                    self.nvim.command(f"buffer {current_bufnr}")
             return len(files)
         return self._run_on_main_and_wait(_do)
+
 
     def save_file(self, filename):
         def _do():
