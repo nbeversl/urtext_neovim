@@ -30,10 +30,38 @@ function M.open_file_picker()
 end
 
 function M.setup()
-    -- keymaps
+    -- Core Urtext actions
     vim.keymap.set('n', '<leader>za', ':UrtextAction show_all_actions<CR>', { desc = 'Urtext: Show All Actions' })
     vim.keymap.set('n', '<leader>ze', ':UrtextAction node_browser<CR>', { desc = 'Urtext: Node Browser' })
-    -- add the rest of your keymaps here
+    vim.keymap.set('n', '<leader>zk', ':UrtextAction open_link<CR>', { desc = 'Urtext: Open Link' })
+
+    -- Navigation with arrow keys
+    vim.keymap.set('n', '<leader>z<Left>', ':UrAction nav_back<CR>', { desc = 'Urtext: Nav Back' })
+    vim.keymap.set('n', '<leader>z<Right>', ':UrAction nav_forward<CR>', { desc = 'Urtext: Nav Forward' })
+
+    -- Additional common actions
+    vim.keymap.set('n', '<leader>z-', ':UrtextAction new_file_node<CR>', { desc = 'Urtext: New File Node' })
+    vim.keymap.set('n', '<leader>zh', ':UrtextAction open_home<CR>', { desc = 'Urtext: Open Home' })
+    vim.keymap.set('n', '<leader>zt', ':UrtextAction insert_timestamp<CR>', { desc = 'Urtext: Insert Timestamp' })
+    vim.keymap.set('n', '<leader>zi', ':UrtextAction random_node<CR>', { desc = 'Urtext: Copy Link Here' })
+    vim.keymap.set('n', '<leader>z<', ':UrtextAction nav_back<CR>', { desc = 'Urtext: Nav Back' })
+    vim.keymap.set('n', '<leader>z>', ':UrtextAction nav_forward<CR>', { desc = 'Urtext: Nav Forward' })
+    vim.keymap.set('n', '<leader>zj', ':UrtextAction file_outline<CR>', { desc = 'Urtext: File Outline Dropdown' })
+    vim.keymap.set('n', '<leader>zm', ':UrtextAction browse_metadata<CR>', { desc = 'Urtext: Find By Meta' })
+    vim.keymap.set('n', '<leader>z>', ':UrtextAction nav_forward<CR>', { desc = 'Urtext: Nav Forward' })
+    vim.keymap.set('n', '<leader>z8', ':UrtextAction node_browser_all_projects<CR>', { desc = 'Urtext: All Projects Node Browser' })
+    vim.keymap.set('n', '<leader>z<left>', ':UrtextAction backlinks_browser<CR>', { desc = 'Urtext: Backlinks Browser' })
+    vim.keymap.set('n', '<leader>z<right>', ':UrtextAction forward_links_browser<CR>', { desc = 'Urtext: Forward Links Browser' })
+    vim.keymap.set('n', '<leader>zc', ':UrtextAction copy_link_to_here<CR>', { desc = 'Urtext: Copy Link Here' })
+    vim.keymap.set('n', '<leader>zC', ':UrtextAction copy_link_to_here_with_project<CR>', { desc = 'Urtext: Copy Link Here With Project' })
+    vim.keymap.set('n', '<leader>zf', ':UrtextAction go_to_frame<CR>', { desc = 'Urtext: Go to Frame' })
+    vim.keymap.set('n', '<leader>zl', ':UrtextAction link_to_node<CR>', { desc = 'Urtext: Nav Forward' })
+    vim.keymap.set('n', '<leader>zn', ':UrtextAction next_node<CR>', { desc = 'Urtext: Next Node' })
+    vim.keymap.set('n', '<leader>zb', ':UrtextAction previous_node<CR>', { desc = 'Urtext: Previous Node' })
+    vim.keymap.set('n', '<leader>zp', ':UrtextAction pop<CR>', { desc = 'Urtext: Pop' })
+    vim.keymap.set('n', '<leader>zP', ':UrtextAction pull<CR>', { desc = 'Urtext: Pull' })
+    vim.keymap.set('n', '<leader>zr', ':UrtextAction rename_single_file<CR>', { desc = 'Urtext: Rename Single File' })
+    vim.keymap.set('n', '<leader>zo', ':UrtextAction select_project<CR>', { desc = 'Urtext: Select Project' })
 end
 
 return M
