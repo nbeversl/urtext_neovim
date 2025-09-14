@@ -7,6 +7,15 @@ local action_state = require("telescope.actions.state")
 
 local M = {}
 
+-- Handle different line ending formats automatically
+vim.opt.fileformats = "unix,dos,mac"
+
+-- Word Wrap for Urtext file type
+-- Global prose word wrap
+vim.opt.wrap = true
+vim.opt.linebreak = true
+vim.opt.breakindent = true
+
 function M.open_telescope()
     local items = vim.g.my_plugin_items or {}
     pickers.new({}, {
