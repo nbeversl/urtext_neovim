@@ -95,7 +95,8 @@ class UrtextNeoVim:
 
     @pynvim.autocmd('BufWritePost', pattern='*', sync=True, eval='expand("<afile>")')
     def on_buf_write_post(self, filename):
-        self.project_list.on_modified(os.path.abspath(filename))
+        if self.project_list:
+            self.project_list.on_modified(os.path.abspath(filename))
 
     @pynvim.autocmd('BufEnter', pattern='*', sync=False, eval='expand("<afile>")')
     def on_buf_enter(self, filename):
