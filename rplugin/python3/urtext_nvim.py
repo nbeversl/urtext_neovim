@@ -533,3 +533,12 @@ class UrtextNeoVim:
         file_pos = int(file_pos)
         span = [int(span[0]), int(span[1])]
         return (full_line or '', col_pos, file_pos, span)
+
+    @pynvim.command('UrtextStarterProject')
+    def create_starter_project(self):
+        folder = os.getcwd()
+        ProjectList.make_starter_project(folder)
+        if not self.project_list:
+            self.project_list = ProjectList(folder, editor_methods=self.editor_methods)
+        else:
+            self.project_list.init_project(folder, make_current=True, action='open_home')
