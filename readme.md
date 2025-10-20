@@ -2,14 +2,13 @@
 
 An implementation of Urtext in [Neovim](https://neovim.io/)
 
-This is an early release for testers.
-Contributions are welcome.
+This is an early release for testers. Contributions are welcome.
 
 ## What is Urtext?
 
 Urtext /ˈʊrtekst/ is a markup language for Python scriptable-notebooks in a text editor
 
-Urtext turns text notes into a live, programmable knowledge base. It parses folders of text documents into uniquely identified nodes, with built-in structure, links, timestamps, and metadata that stay inside the files. N=o database, no lock-in. Embedded Python lets you query, transform, and generate content dynamically, so writing, organizing, and automating all happen in the same place: your editor and your text.
+For a fast overview, visit https://urtext.co/
 
 ## Installation
 
