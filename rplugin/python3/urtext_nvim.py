@@ -41,11 +41,9 @@ class UrtextNeoVim:
             'retarget_view' : self.retarget_view,
             'refresh_files' : self.refresh_files,
             'get_open_files': self.get_open_files,
-            # 'select_file_or_folder': select_file_or_folder,
-            # 'get_open_files': get_open_files,
+            'select_file_or_folder': self.select_file_or_folder,
             # 'preview_file_at_position' : preview_file_at_position,
             # 'close_inactive': close_inactive,
-            'open_file_dialog': self.open_file_dialog,
             'set_position': self.set_position,
             # 'hover_popup': hover_popup,
             # 'get_selection': get_selection
@@ -154,29 +152,45 @@ class UrtextNeoVim:
 
         self.nvim.async_call(cb)
 
-    def open_file_dialog(self, callback, allow_folders=False):
-        # Use Telescope to pick files/folders; synchronous return via callback invocation
+    def select_file_or_folder(self, callback, allow_folders=True, start_dir=None):
+        """
+        Opens telescope file/folder picker and returns the selected path via callback.
+        
+        Args:
+            callback: Function to call with the selected path
+            allow_folders: Whether to allow folder selection (default: True)
+            start_dir: Starting directory for picker (default: current file's directory)
+        """
         self.urtext_callback = callback
         self._callback_expects_value = True
+        
         def _cb():
             self.nvim.vars['urtext_allow_folders'] = 1 if allow_folders else 0
-            # start directory = current buffer's folder
-            start_dir = os.path.dirname(self.get_current_filename())
+            # Use provided start_dir or fall back to current buffer's folder
             if start_dir:
                 self.nvim.vars['urtext_start_dir'] = start_dir
+            else:
+                current_file = self.get_current_filename()
+                if current_file:
+                    self.nvim.vars['urtext_start_dir'] = os.path.dirname(current_file)
             self.nvim.command('lua require("urtext").open_file_picker()')
+        
         self.nvim.async_call(_cb)
 
     @pynvim.command('UrtextFilePicked', nargs='*', sync=True)
     def on_file_picked(self, args):
-        # receives a single arg: full path string
+        # receives path as arguments - join them back together in case of spaces
         if not self.urtext_callback:
             return ''
         if not args:
             return ''
-        a0 = args[0]
-        selected = a0[0] if isinstance(a0, list) and a0 else a0
-        selected = str(selected).strip("'\"")
+        
+        selected = ' '.join(str(arg) for arg in args)
+        selected = selected.strip("'\"")
+        
+        if selected:
+            selected = os.path.realpath(selected)
+                
         cb = self.urtext_callback
         self.urtext_callback = None
         cb(selected)
